@@ -1,64 +1,39 @@
-/**
- * This file will contain the logic for the product resource. 
- * Everytime any CRUD request comes for the product, methods defined in this controller
- * file will be executed. 
-*/
-
-
-const { product } = require("../models");
-const db = require("../models");
+const db = require('../models');
 const Product = db.product;
-
-/**
- * Create and save a new producy
-*/
 exports.create = (req, res) => {
-
-    /**
-     * Validation of the request body
-    */
-
-    if(!req.body.name) {
-        res.status(400).send({
-            message: "Name of the product can't be empty !"
-        })
-        return;
-    }
-
-    if(!req.body.cost) {
-        res.status(400).send({
-            message: "Cost of the product can't be empty !"
-        })
-        return;
-    }
+ 
 
     const product = {
         name: req.body.name,
         description: req.body.description,
-        cost: req.body.cost
+        cost: req.body.cost,
+        categoryId: req.body.categoryId
     }
 
+    // console.log(Product)
+    // res.json(product)
     Product.create(product)
-    .then(product => {
-        console.log(`product name: [ ${product.name}] got inserted in db`);
-        res.status(200).send(product);
+    .then(category => {
+        console.log(`product name: [$product.name] got inserted in the DB`)
+        res.status(201).send(product);
+    
     })
     .catch(err => {
-        console.log(`Issue in inserting product name: [ ${product.name}]. Error Message: ${err.message}`);
+        console.log(`Issue in inserting product name: [${product.name}]`)
+        console.log(`Error Message : ${err.message}`)
         res.status(500).send({
-            message: "Some internal error while storing the product"
+            message: "Some internal error while storing the category!"
         })
-    })
+    })    
+  
 }
 
-/**
- * Get a list of all the products
-*/
 
 exports.findAll = (req, res) => {
 
-    console.log(req.query);
     let productName = req.query.name;
+    let minCost = req.query.minCost; //null
+    let maxCost = req.query.maxCost; //null
     let promise;
 
     if(productName) {
@@ -67,11 +42,39 @@ exports.findAll = (req, res) => {
                 name: productName
             }
         })
-    }else{
+    }else if(minCost && maxCost) {
+        promise = Product.findAll({
+            where: {
+                cost: {
+                    [Op.gte] : minCost,
+                    [Op.lte]: maxCost
+                }
+            }
+        })
+    }else if(minCost) {
+        promise = Product.findAll({
+            where: {
+                cost: {
+                    [Op.gte] : minCost
+                }
+            }
+        })
+    }else if(maxCost) {
+        promise = Product.findAll({
+            where: {
+                cost: {
+                    [Op.lte] : maxCost
+                }
+            }
+        })
+    }
+    else{
         promise = Product.findAll();
     }
     promise
     .then(products => {
+        console.log(products)
+
         res.status(200).send(products);
     })
     .catch(err => {
@@ -80,6 +83,7 @@ exports.findAll = (req, res) => {
         })
     })
 }
+
 
 /**
  * Get a product based on product id
@@ -106,18 +110,6 @@ exports.findOne = (req, res) => {
 }
 
 exports.update = (req, res) => {
-
-    if(!req.body.name) {
-        res.status(400).send({
-            message: "Name of the product cannot be empty"
-        })
-    }
-    
-    if(!req.body.cost) {
-        res.status(400).send({
-            message: "Cost of the product cannot be empty"
-        })
-    }
 
     const product = {
         name: req.body.name,
@@ -162,6 +154,25 @@ exports.delete = (req, res) => {
     .catch(err => {
         res.status(500).send({
             message: "Some internal error while deleting the product"
+        })
+    })
+}
+
+
+exports.getProductUnderCategory = (req, res) => {
+    const categoryId = parseInt(req.params.categoryId);
+
+    Product.findAll({
+        where : {categoryId: categoryId}
+    }).then(products => {
+        if(products) {
+            res.status(200).json(products)
+        } else {
+            res.status(200).json({})
+        }
+    }).catch(err => {
+        res.status(500).send({
+            message: "Some internal error while fetching products by categoryId"
         })
     })
 }

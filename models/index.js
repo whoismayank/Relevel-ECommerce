@@ -23,7 +23,9 @@ const seq = new Sequelize(
     config.PASSWORD,
     {
         host: config.HOST,
-        dialect: config.dialect
+        dialect: config.dialect,
+        logging: false
+
     }
 );
 
@@ -32,17 +34,27 @@ db.Sequelize = Sequelize;
 db.sequelize = seq;
 db.category = require('./category.model.js')(db.sequelize, Sequelize);
 db.product = require('./product.model.js')(db.sequelize, Sequelize);
+db.user = require('./user.model')(db.sequelize, Sequelize);
+db.role = require('./role.model')(db.sequelize, Sequelize);
 
-/**
- * db = {
- *  Sequelize: 
- *  sequelize: 
- *  category: function() {
- *  
- *  }
- *  product: function() {
- *  
- * }
- * }
- */
+
+// Establish the relationship between categories and products
+// single category can have multiple products
+db.category.hasMany(db.product);
+
+
+// Establish the relationship between roles and user
+db.role.belongsToMany(db.user, {
+    through: "user_roles",
+    foreignKey: "roleId",
+})
+
+// Establish the relationship between user and roles
+db.user.belongsToMany(db.role, {
+    through: "user_roles",
+    foreignKey: "userId"
+})
+
+
+
 module.exports = db;
