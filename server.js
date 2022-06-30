@@ -20,6 +20,7 @@ app.use(bodyParser.json());
 */
 const db = require("./models");
 const Category = db.category;
+const Role = db.role;
 db.sequelize.sync({force: true})
 .then(() => {
     console.log('tables dropped and created');
@@ -43,6 +44,17 @@ function init() {
         })
         .catch(err => {
             console.log("Error while initialising categories table");
+        })
+          /**
+         * Adding Roles
+        */
+           Role.create({
+            id: 1,
+            name: "user"
+        });
+        Role.create({
+            id: 2,
+            name: "admin"
         })
 }
 

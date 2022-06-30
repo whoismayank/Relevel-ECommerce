@@ -22,7 +22,7 @@ exports.create = (req, res) => {
     };
 
     Category.create(category)
-    .then(category => {
+    .then(respinse => {
         console.log(`category name: [$category.name] got inserted in the DB`)
         res.status(201).send(category);
     
